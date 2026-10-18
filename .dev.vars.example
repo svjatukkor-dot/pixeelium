@@ -1,0 +1,9 @@
+# Скопіюй у .dev.vars (він у .gitignore) і заповни.
+# PAY_ADDRESS — обов'язково, інакше прийом оплати вимкнено.
+PAY_ADDRESS=TВАША_АДРЕСА_USDT_TRON_TRC20
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# Не задавай у production:
+# TRON_API_BASE=http://127.0.0.1:8799
+# TRONGRID_API_KEY=
+# APP_ORIGIN=https://site-xxx.freebuff.page

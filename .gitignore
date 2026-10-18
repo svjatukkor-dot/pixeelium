@@ -1,0 +1,9 @@
+node_modules/
+dist/
+public/
+worker.js
+.wrangler/
+.dev.vars
+*.log
+.env
+.env.*

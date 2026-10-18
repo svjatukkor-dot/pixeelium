@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pixelium — стіна пікселів, які можна купити</title>
+    <meta name="description" content="Купуйте або орендуйте пікселі на спільній дошці. Оплата USDT (TRC-20), зараховується автоматично." />
+    <meta name="color-scheme" content="light" />
+    <meta property="og:title" content="Pixelium — спільна дошка пікселів" />
+    <meta property="og:description" content="Займи свій шматок дошки: логотип, посилання, реклама. Оплата в USDT." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="toast" class="toast" hidden></div>
+
+    <div id="promoBanner" class="promo" role="status">
+      <p data-i18n-html="promo"><b>Дошка відкрита.</b> Перші власники займають найкращі місця — центр і рядки під шапкою.</p>
+      <button id="promoClose" class="x" type="button" aria-label="Закрити">✕</button>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="/"><img src="/favicon.svg" width="28" height="28" alt="" />Pixelium</a>
+      <div class="stats" aria-live="polite">
+        <span><b id="statTaken">—</b> <span data-i18n="taken">зайнято</span></span>
+        <span><b id="statFree">—</b> <span data-i18n="free">вільно</span></span>
+      </div>
+      <div class="auth">
+        <div id="langSwitch" class="lang-switch" role="group" aria-label="Мова"></div>
+        <button id="btnAdmin" class="btn ghost" type="button" hidden data-i18n="admin">Адмін</button>
+        <button id="btnAccount" class="btn ghost" type="button" hidden data-i18n="account">Кабінет</button>
+        <button id="btnMine" class="btn ghost" type="button" data-i18n="minePixels">Мої пікселі</button>
+        <button id="btnLogin" class="btn primary" type="button" data-i18n="login">Увійти</button>
+        <button id="userChip" class="user-chip user-img" type="button" hidden data-i18n-label="account">
+          <img id="userPic" alt="" width="28" height="28" />
+          <span id="userName"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <!-- Лендінг: перший екран для гостя — що це і одна головна дія (вхід). -->
+      <section class="hero" id="hero">
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-tiles" id="heroTiles"></div>
+        </div>
+        <div class="hero-text">
+          <span class="hero-badge" data-i18n="offerBanner">Дошка відкрита</span>
+          <h1 data-i18n-html="heroTitle">Твій шматок <span class="hero-acc">інтернету</span> — за пікселі</h1>
+          <p data-i18n-html="heroBody">Стіна з <b id="statPixels">…</b> пікселів.</p>
+          <div class="hero-cta">
+            <button id="heroLogin" class="btn primary big" type="button" data-i18n="heroLogin">Увійти</button>
+            <button id="heroBoard" class="btn ghost big" type="button" data-i18n="heroBoard">Дивитись дошку ↓</button>
+          </div>
+          <div class="hero-steps">
+            <span data-i18n="step1">1 · Увійди</span><span data-i18n="step2">2 · Виділи ділянку</span><span data-i18n="step3">3 · Кастомізуй</span><span data-i18n="step4">4 · Оплати USDT</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="boardSection">
+        <div class="board-head">
+          <span id="boardHint" class="hint" data-i18n="boardHint">Виділи ділянку і натисни «Кастомізувати» — усе в спливаючому вікні</span>
+          <div class="board-controls">
+            <form id="jumpForm" class="jump-form" role="search" aria-label="Перейти до координат">
+              <label>X <input id="jumpX" type="number" min="0" max="39999" placeholder="0" /></label>
+              <label>Y <input id="jumpY" type="number" min="10" max="24999" placeholder="10" /></label>
+              <button id="btnJump" class="btn ghost small" type="submit" data-i18n="goBtn">Перейти</button>
+            </form>
+            <div class="zoom-controls" role="group" aria-label="Масштаб">
+              <button id="btnZoomOut" class="btn ghost small" type="button" data-i18n-title="zoomOut" title="Зменшити">−</button>
+              <span id="zoomLevel" class="zoom-level">6px</span>
+              <button id="btnZoomIn" class="btn ghost small" type="button" data-i18n-title="zoomIn" title="Збільшити">+</button>
+            </div>
+            <span id="hoverReadout" class="readout" data-i18n="readout">x:— y:—</span>
+          </div>
+        </div>
+        <div id="boardScroller" class="board-scroller">
+        <div id="board" class="board" tabindex="0" role="application" data-i18n-label="ariaBoard">
+          <div id="reservedBand" class="layer reserved-layer" aria-hidden="true"><span class="reserved-note" data-i18n="reservedNote">Pixelium · зарезервована зона</span></div>
+          <div id="cellsLayer" class="layer"></div>
+          <div id="hoverLayer" class="layer"></div>
+          <div id="selLayer" class="layer"></div>
+        </div>
+      </div>
+      <ul class="legend">
+        <li><i class="sw free"></i><span data-i18n="legendFree">вільно</span></li><li><i class="sw sel"></i><span data-i18n="legendSel">твоє виділення</span></li>
+        <li><i class="sw busy"></i><span data-i18n="legendBusy">зайнято</span></li><li><i class="sw buy"></i><span data-i18n="legendBuy">куплено назавжди</span></li>
+      </ul>
+      </section>
+    </main>
+
+    <footer class="footer" data-i18n="footer">Pixelium · USDT TRC-20 · Ціни в USDT. Перевіряй мережу переказу: кошти в іншій мережі повернути неможливо.</footer>
+
+    <!-- Спливаюче вікно кастомізації ділянки: весь функціонал док-панелі
+         + введення вмісту (заголовок / картинка / колір) у одному місці. -->
+    <dialog id="customizeDialog" class="modal">
+      <div class="modal-head"><h3 data-i18n="custTitle">Кастомізація ділянки</h3><button class="x" type="button" data-close aria-label="Закрити">✕</button></div>
+      <div class="modal-body cust-body">
+        <div class="content-grid">
+          <label class="field"><span data-i18n="fieldTitle">Заголовок</span><input id="inTitle" type="text" maxlength="60" data-i18n-ph="fieldTitlePh" placeholder="Мій сайт" /></label>
+          <label class="field"><span data-i18n="fieldLink">Посилання (http/https)</span><input id="inLink" type="url" maxlength="2048" placeholder="https://example.com" /></label>
+          <label class="field"><span data-i18n="fieldImage">Картинка (URL)</span><input id="inImage" type="url" maxlength="2048" placeholder="https://example.com/banner.png" /></label>
+          <label class="field"><span data-i18n="fieldColor">Колір фону</span><span class="color-row"><input id="inColor" type="color" value="#5b3df5" /><code id="colorCode">#5b3df5</code></span></label>
+        </div>
+        <div class="cust-mode-row">
+          <div class="chips" id="modeChips" role="group" aria-label="Режим">
+            <button type="button" data-mode="buy" class="active" data-i18n="modeBuy">Назавжди</button>
+            <button type="button" data-mode="rent" data-i18n="modeRent">Оренда</button>
+          </div>
+          <div class="chips" id="hourChips" hidden>
+            <button type="button" data-hours="1" data-i18n="h1">1 год</button><button type="button" data-hours="24" data-i18n="h24">1 день</button>
+            <button type="button" data-hours="168" data-i18n="h168">7 днів</button><button type="button" data-hours="720" data-i18n="h720">30 днів</button>
+          </div>
+        </div>
+        <div class="cust-summary">
+          <span id="selSummary" data-i18n="selSummaryDefault">Виділи пікселі на дошці</span>
+          <strong id="priceTotal">—</strong>
+        </div>
+        <button id="btnBuy" class="btn primary big" type="button" disabled data-i18n="buy">Купити</button>
+        <p id="panelNote" class="note" data-i18n="loading">Завантаження…</p>
+      </div>
+    </dialog>
+
+    <dialog id="accountDialog" class="modal">
+      <div class="modal-head"><h3 data-i18n="accountTitle">Кабінет</h3><button class="x" type="button" data-close aria-label="Закрити">✕</button></div>
+      <div class="modal-body account-body" id="accountBody"></div>
+    </dialog>
+
+    <dialog id="checkoutDialog" class="modal">
+      <div class="modal-head"><h3 data-i18n="checkout">Оплата</h3><button class="x" type="button" data-close aria-label="Закрити">✕</button></div>
+      <div class="modal-body" id="checkoutBody">
+        <div class="summary" id="coSummary"></div>
+        <ol class="pay-steps">
+          <li>
+            <label data-i18n-html="payStep1">1. Відкрий гаманець і вибери USDT у мережі <b>TRC-20</b>. Адреса:</label>
+            <div class="copy-row"><code id="payAddress">—</code><button class="btn ghost small" type="button" id="copyAddr" data-i18n="copy">Копіювати</button></div>
+          </li>
+          <li>
+            <label data-i18n-html="payStep2">2. Надішли<b> рівно цю суму</b> — до останньої цифри після коми. Активація працює лише за точного збігу суми:</label>
+            <div class="copy-row amount"><code id="payAmount">—</code><button class="btn ghost small" type="button" id="copyAmount" data-i18n="copy">Копіювати</button></div>
+            <p class="warn" data-i18n-html="payWarn"><b>Комісію біржі платить відправник.</b></p>
+          </li>
+          <li><label data-i18n="payStep3">3. Чекай. Оплата зараховується сама через 1–2 хвилини.</label><p id="payTimer" class="timer">—</p></li>
+        </ol>
+        <details class="manual">
+          <summary data-i18n="manualSummary">Не зарахувалось? Встав хеш транзакції</summary>
+          <input id="txHash" type="text" maxlength="64" spellcheck="false" autocomplete="off" data-i18n-ph="txPlaceholder" placeholder="64 символи TXID" />
+          <button id="btnVerify" class="btn primary" type="button" data-i18n="verify">Перевірити оплату</button>
+        </details>
+        <p id="payStatus" class="status" role="status"></p>
+      </div>
+    </dialog>
+
+    <dialog id="mineDialog" class="modal">
+      <div class="modal-head"><h3 data-i18n="mine">Мої пікселі</h3><button class="x" type="button" data-close aria-label="Закрити">✕</button></div>
+      <div class="modal-body" id="mineBody"></div>
+    </dialog>
+
+    <dialog id="successDialog" class="modal">
+      <div class="modal-head"><h3 data-i18n="done">Готово</h3><button class="x" type="button" data-close aria-label="Закрити">✕</button></div>
+      <div class="modal-body" id="successBody"></div>
+    </dialog>
+
+    <dialog id="adminDialog" class="modal">
+      <div class="modal-head"><h3 data-i18n="adminTitle">Адмін-панель</h3><button class="x" type="button" data-close aria-label="Закрити">✕</button></div>
+      <div class="modal-body admin-body">
+        <section aria-label="Скарги користувачів">
+          <h4 data-i18n="adminReports">Скарги</h4>
+          <div id="adminReports" class="admin-list"></div>
+        </section>
+        <section aria-label="Вхідні перекази без замовлень">
+          <h4 data-i18n="adminIncoming">Вхідні TRC-20 перекази (непривʼязані вгорі)</h4>
+          <p class="hint" data-i18n="adminIncomingHint">«без замовлення» = сума не збігається з жодним незавершеним замовленням.</p>
+          <div id="adminIncoming" class="admin-list"></div>
+        </section>
+        <section aria-label="Налаштування банера">
+          <label class="admin-toggle-row">
+            <input type="checkbox" id="chkBannerHidden" />
+            <span data-i18n="bannerHiddenToggle">Сховати промо-банер</span>
+          </label>
+        </section>
+      </div>
+    </dialog>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
